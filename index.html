@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>منظومة فحص واستلام السكوترات | Scooter Shop Company</title>
+  
+  <!-- خط Cairo الرسمي -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- مكتبة تحويل الواجهة لصور html2canvas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Cairo', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              orange: '#EA580C',
+              orangeDark: '#C2410C',
+              orangeLight: '#FB923C',
+              dark: '#09090B',
+              card: '#18181B',
+              input: '#27272A',
+              border: '#3F3F46'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #09090B;
+      color: #F4F4F5;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #3F3F46;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-12 antialiased">
+
+  <!-- نافذة تسجيل الدخول للمديرين (Login Modal) -->
+  <div id="loginModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-brand-card border border-brand-border p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
+      
+      <!-- شعار النظام -->
+      <div class="flex justify-center mb-4">
+        <div class="w-20 h-20 bg-brand-input rounded-full flex items-center justify-center border-2 border-brand-orange shadow-lg shadow-orange-950/40">
+          <svg class="w-12 h-12 text-brand-orange" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+      </div>
+
+      <h2 class="text-2xl font-black text-white tracking-wide">SCOOTER SHOP</h2>
+      <p class="text-xs text-brand-orange font-bold uppercase tracking-wider mb-6">نظام الفحص والاستلام الداخلي</p>
+
+      <form id="loginForm" onsubmit="handleAuthLogin(event)" class="space-y-4 text-right">
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">اسم المستخدم</label>
+          <input type="text" id="authUsername" placeholder="أدخل اسم المستخدم" required class="w-full bg-brand-input border border-brand-border rounded-xl p-3 text-sm text-white placeholder-zinc-500 focus:border-brand-orange focus:outline-none transition-all">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-zinc-400 mb-1">كلمة المرور</label>
+          <input type="password" id="authPassword" placeholder="••••••••" required class="w-full bg-brand-input border border-brand-border rounded-xl p-3 text-sm text-white placeholder-zinc-500 focus:border-brand-orange focus:outline-none transition-all">
+        </div>
+        <p id="authErrorMsg" class="text-xs text-rose-500 font-semibold hidden text-center pt-1">بيانات الدخول غير صحيحة، يرجى المحاولة مجدداً.</p>
+        <button type="submit" class="w-full bg-brand-orange hover:bg-brand-orangeDark text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-orange-950/50 mt-2">
+          تسجيل الدخول
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- الواجهة الرئيسية للنظام -->
+  <div id="appContainer" class="hidden">
+    
+    <!-- شريط الرأس والتحكم -->
+    <header class="bg-brand-card/90 backdrop-blur border-b border-brand-border p-4 sticky top-0 z-40 shadow-xl">
+      <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+        
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-brand-input rounded-lg flex items-center justify-center border border-brand-orange">
+            <span class="text-brand-orange font-black text-base">SS</span>
+          </div>
+          <div>
+            <h1 class="text-lg font-bold text-white leading-tight">SCOOTER SHOP COMPANY</h1>
+            <p class="text-xs text-zinc-400">إصدار تقارير الفحص والاعتماد</p>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <span id="activeUserBadge" class="text-xs font-semibold bg-zinc-800 text-zinc-300 px-3 py-2 rounded-lg border border-brand-border">المستخدم: -</span>
+          <button onclick="exportCurrentScooter()" class="bg-brand-orange hover:bg-brand-orangeDark text-white text-xs font-bold px-4 py-2.5 rounded-lg transition-all shadow-md shadow-orange-950/30">
+            تصدير صورة هذا السكوتر
+          </button>
+          <button onclick="exportAllBatch()" class="bg-zinc-800 hover:bg-zinc-700 text-brand-orangeLight border border-brand-orange/40 text-xs font-bold px-4 py-2.5 rounded-lg transition-all">
+            تصدير كامل الدفعة
+          </button>
+          <button onclick="handleAuthLogout()" class="bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-900 text-xs px-3 py-2.5 rounded-lg transition-all">
+            خروج
+          </button>
+        </div>
+
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-4 space-y-6">
+
+      <!-- القسم المشترك: بيانات الاستلام والفرع -->
+      <section class="bg-brand-card border border-brand-border rounded-2xl p-5 shadow-lg space-y-4">
+        <h2 class="text-sm font-bold text-brand-orange border-b border-brand-border pb-2 flex items-center gap-2">
+          <span>بيانات محضر الاستلام والفرع</span>
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">الفرع المستلم *</label>
+            <select id="branchName" class="w-full bg-brand-input border border-brand-border rounded-xl p-2.5 text-xs font-semibold text-white focus:border-brand-orange outline-none">
+              <option value="فرع_الرئيسي">الفرع الرئيسي</option>
+              <option value="فرع_مدينة_نصر">فرع مدينة نصر</option>
+              <option value="فرع_المهندسين">فرع المهندسين</option>
+              <option value="فرع_الإسكندرية">فرع الإسكندرية</option>
+              <option value="فرع_المعادي">فرع المعادي</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">تاريخ الفحص</label>
+            <input type="date" id="inspectionDate" class="w-full bg-brand-input border border-brand-border rounded-xl p-2.5 text-xs text-white focus:border-brand-orange outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">اسم الفني القائم بالفحص *</label>
+            <input type="text" id="inspectorName" placeholder="اسم الفني" class="w-full bg-brand-input border border-brand-border rounded-xl p-2.5 text-xs text-white focus:border-brand-orange outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">اسم مدير الفرع المعتمد *</label>
+            <input type="text" id="managerName" placeholder="اسم مدير المعرض" class="w-full bg-brand-input border border-brand-border rounded-xl p-2.5 text-xs text-white focus:border-brand-orange outline-none">
+          </div>
+        </div>
+      </section>
+
+      <!-- إدارة سكوترات الدفعة (Tabs Bar) -->
+      <div class="flex items-center justify-between gap-3 overflow-x-auto pb-1 custom-scrollbar">
+        <div id="scooterTabs" class="flex gap-2">
+          <!-- يتم بناء أزرار السكوترات ديناميكياً -->
+        </div>
+        <button onclick="addNewScooter()" class="bg-brand-orange/20 hover:bg-brand-orange/30 text-brand-orangeLight border border-brand-orange/40 text-xs font-bold px-4 py-2 rounded-xl shrink-0 transition-all">
+          + إضافة سكوتر جديد للدفعة
+        </button>
+      </div>
+
+      <!-- استمارة فحص السكوتر المحدد -->
+      <section class="bg-brand-card border border-brand-border rounded-2xl p-6 shadow-lg space-y-6">
+        
+        <!-- المواصفات الأساسية -->
+        <div>
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-base font-bold text-white" id="currentScooterTitle">بيانات سكوتر #1</h3>
+            <button onclick="removeCurrentScooter()" id="deleteScooterBtn" class="text-xs font-semibold text-rose-400 hover:text-rose-300">حذف هذا السكوتر من الدفعة</button>
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-zinc-400 mb-1">الموديل والماركة *</label>
+              <input type="text" id="scooterModel" oninput="updateCurrentData('model', this.value)" placeholder="مثال: SYM Symphony SR" class="w-full bg-brand-input border border-brand-border rounded-xl p-2.5 text-xs text-white focus:border-brand-orange outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-zinc-400 mb-1">سنة الصنع / الموديل</label>
+              <input type="text" id="scooterYear" oninput="updateCurrentData('year', this.value)" placeholder="مثال: 2024" class="w-full bg-brand-input border border-brand-border rounded-xl p-2.5 text-xs text-white focus:border-brand-orange outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-zinc-400 mb-1">اللون</label>
+              <input type="text" id="scooterColor" oninput="updateCurrentData('color', this.value)" placeholder="مثال: أسود / برتقالي" class="w-full bg-brand-input border border-brand-border rounded-xl p-2.5 text-xs text-white focus:border-brand-orange outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-zinc-400 mb-1">رقم الشاسيه *</label>
+              <input type="text" id="scooterChassis" oninput="updateCurrentData('chassis', this.value)" placeholder="أدخل رقم الشاسيه كاملاً" class="w-full bg-brand-input border border-brand-border rounded-xl p-2.5 text-xs text-white focus:border-brand-orange outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-zinc-400 mb-1">رقم الموتور</label>
+              <input type="text" id="scooterEngine" oninput="updateCurrentData('engine', this.value)" placeholder="أدخل رقم الموتور" class="w-full bg-brand-input border border-brand-border rounded-xl p-2.5 text-xs text-white focus:border-brand-orange outline-none">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-zinc-400 mb-1">قراءة العداد (كم)</label>
+              <input type="number" id="scooterOdometer" oninput="updateCurrentData('odometer', this.value)" placeholder="0" class="w-full bg-brand-input border border-brand-border rounded-xl p-2.5 text-xs text-white focus:border-brand-orange outline-none">
+            </div>
+          </div>
+        </div>
+
+        <!-- بنود الفحص الظاهري والميكانيكي -->
+        <div class="border-t border-brand-border pt-4">
+          <h4 class="text-xs font-bold text-brand-orange mb-3 tracking-wide">جدول بنود الفحص الفني</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="checklistContainer">
+            <!-- بنود الفحص تولد ديناميكياً -->
+          </div>
+        </div>
+
+        <!-- إرفاق صور التلفيات والملاحظات -->
+        <div class="border-t border-brand-border pt-4">
+          <div class="flex justify-between items-center mb-3">
+            <div>
+              <h4 class="text-xs font-bold text-brand-orange">صور الملاحظات والعيوب (بحد أقصى 4 صور)</h4>
+              <p class="text-[11px] text-zinc-400">تظهر الصور المرفقة تلقائياً داخل بطاقة الفحص المعتمدة</p>
+            </div>
+            <label class="cursor-pointer bg-brand-input hover:bg-zinc-700 text-brand-orangeLight border border-brand-border text-xs font-semibold px-3 py-2 rounded-xl transition-all">
+              <span>+ رفع / التقاط صور</span>
+              <input type="file" id="photoInput" accept="image/*" multiple class="hidden" onchange="handleImageUpload(event)">
+            </label>
+          </div>
+          <div id="photosPreviewContainer" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <!-- معاينة مصغرات الصور -->
+          </div>
+        </div>
+
+        <!-- الملاحظات والقرار النهائي -->
+        <div class="border-t border-brand-border pt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="md:col-span-2">
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">ملاحظات الفني وتوصيات الإصلاح</label>
+            <textarea id="scooterNotes" oninput="updateCurrentData('notes', this.value)" rows="2" placeholder="سجل أي ملاحظات بخصوص قطع الغيار أو الصيانة المطلوبة..." class="w-full bg-brand-input border border-brand-border rounded-xl p-2.5 text-xs text-white focus:border-brand-orange outline-none"></textarea>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-zinc-400 mb-1">القرار الفني النهائي *</label>
+            <select id="scooterStatus" onchange="updateCurrentData('status', this.value)" class="w-full bg-brand-input border border-brand-border rounded-xl p-2.5 text-xs font-bold text-white focus:border-brand-orange outline-none">
+              <option value="مقبول - سليم">مقبول - سليم تماماً</option>
+              <option value="مقبول مع ملاحظات">مقبول مع ملاحظات صيانة</option>
+              <option value="مرفوض">مرفوض وغير مطابق للاستلام</option>
+            </select>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+  </div>
+
+  <!-- الحاوية المخصصة لتوليد الصورة المعتمدة (Render Engine) -->
+  <div class="fixed left-[-9999px] top-0 pointer-events-none">
+    <div id="renderCard" class="w-[850px] bg-[#09090B] text-zinc-100 p-8 border-2 border-brand-border rounded-2xl space-y-6">
+      
+      <!-- ترويسة التقرير الرسمي -->
+      <div class="flex justify-between items-center border-b-2 border-brand-orange pb-4">
+        <div class="flex items-center gap-4">
+          <div class="w-14 h-14 bg-zinc-900 rounded-xl flex items-center justify-center border border-brand-orange">
+            <span class="text-brand-orange font-black text-xl">SS</span>
+          </div>
+          <div>
+            <h1 class="text-2xl font-black text-white tracking-wide">SCOOTER SHOP COMPANY</h1>
+            <p class="text-xs text-zinc-400" id="rcBranchDate">الفرع: - | تاريخ الفحص: -</p>
+          </div>
+        </div>
+        <div>
+          <div id="rcStatusBadge" class="px-4 py-2 rounded-lg font-black text-sm border">
+            مقبول - سليم
+          </div>
+        </div>
+      </div>
+
+      <!-- مواصفات السكوتر -->
+      <div class="grid grid-cols-3 gap-3 text-xs bg-zinc-900/90 p-4 rounded-xl border border-zinc-800">
+        <div><span class="text-zinc-400">الموديل:</span> <strong id="rcModel" class="text-white block text-sm mt-0.5">-</strong></div>
+        <div><span class="text-zinc-400">سنة الصنع:</span> <strong id="rcYear" class="text-white block text-sm mt-0.5">-</strong></div>
+        <div><span class="text-zinc-400">اللون:</span> <strong id="rcColor" class="text-white block text-sm mt-0.5">-</strong></div>
+        <div><span class="text-zinc-400">رقم الشاسيه:</span> <strong id="rcChassis" class="text-brand-orangeLight font-mono block text-sm mt-0.5">-</strong></div>
+        <div><span class="text-zinc-400">رقم الموتور:</span> <strong id="rcEngine" class="text-zinc-200 font-mono block text-sm mt-0.5">-</strong></div>
+        <div><span class="text-zinc-400">العداد:</span> <strong id="rcOdometer" class="text-zinc-200 block text-sm mt-0.5">-</strong></div>
+      </div>
+
+      <!-- نتائج الفحص -->
+      <div>
+        <h3 class="text-xs font-bold text-brand-orange uppercase mb-2 border-b border-zinc-800 pb-1">نتائج الفحص الميكانيكي والظاهري</h3>
+        <div id="rcChecklist" class="grid grid-cols-2 gap-2 text-xs">
+          <!-- يتم ملؤها وقت استخراج الصورة -->
+        </div>
+      </div>
+
+      <!-- شبكة صور التلفيات -->
+      <div id="rcPhotosSection" class="hidden">
+        <h3 class="text-xs font-bold text-brand-orange uppercase mb-2 border-b border-zinc-800 pb-1">صور الملاحظات والعيوب المرفقة</h3>
+        <div id="rcPhotosContainer" class="grid grid-cols-4 gap-2">
+          <!-- تدرج الصور هنا -->
+        </div>
+      </div>
+
+      <!-- الملاحظات والتوصيات -->
+      <div class="text-xs bg-zinc-900/60 p-3.5 rounded-xl border border-zinc-800">
+        <span class="text-brand-orange font-bold block mb-1">ملاحظات الفني وتوصيات الصيانة:</span>
+        <p id="rcNotes" class="text-zinc-300 leading-relaxed">- لا توجد ملاحظات إضافية.</p>
+      </div>
+
+      <!-- التوقيعات والاعتماد الرسمي -->
+      <div class="flex justify-between items-center text-xs pt-4 border-t border-zinc-800">
+        <div>
+          <span class="text-zinc-400">الفني القائم بالفحص:</span>
+          <strong id="rcInspector" class="text-white block text-sm mt-0.5">-</strong>
+        </div>
+        <div>
+          <span class="text-zinc-400">مدير المعرض المعتمد:</span>
+          <strong id="rcManager" class="text-white block text-sm mt-0.5">-</strong>
+        </div>
+        <div class="text-right">
+          <span class="text-[10px] text-zinc-500 font-mono block">SCOOTER SHOP INSPECTION SYSTEM</span>
+          <span class="text-[10px] text-brand-orange font-semibold">تقرير رسمي معتمد</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    /**
+     * قائمة المستخدمين المصرح لهم بالدخول
+     */
+    const AUTHORIZED_USERS = [
+      { user: "admin", pass: "scooter2026", name: "الإدارة العامة", defaultBranch: "فرع_الرئيسي" },
+      { user: "branch1", pass: "nasrcity123", name: "معرض مدينة نصر", defaultBranch: "فرع_مدينة_نصر" },
+      { user: "branch2", pass: "mohandessin123", name: "معرض المهندسين", defaultBranch: "فرع_المهندسين" },
+      { user: "branch3", pass: "alex123", name: "معرض الإسكندرية", defaultBranch: "فرع_الإسكندرية" },
+      { user: "branch4", pass: "maadi123", name: "معرض المعادي", defaultBranch: "فرع_المعادي" },
+      { user: "branch5", pass: "main123", name: "المعرض الرئيسي", defaultBranch: "فرع_الرئيسي" }
+    ];
+
+    /**
+     * بنود الفحص المعتمدة
+     */
+    const INSPECTION_ITEMS = [
+      { id: 'body', label: 'الفايبر الخارجي والدهان ووجود خدوش' },
+      { id: 'chassis', label: 'استقامة الشاسيه وسلامة القوائم واللحامات' },
+      { id: 'suspension', label: 'المساعدين الأمامي والخلفي ومنظومة التعليق' },
+      { id: 'brakes', label: 'منظومة الفرامل (تيل / باكم / خراطيم)' },
+      { id: 'engine', label: 'المحرك وصوت التشغيل وعدم تسريب زيوت' },
+      { id: 'electrical', label: 'البطارية، المارش، الإنارة والإشارات، العدادات' },
+    ];
+
+    /**
+     * حالة التطبيق المركزية
+     */
+    let batchState = {
+      currentIndex: 0,
+      scooters: [createNewScooterObject(1)]
+    };
+
+    /**
+     * اسم الدالة: createNewScooterObject
+     * المميزات: إنشاء هيكل كائن جديد يحتوي على كافة الحقول الافتراضية لسكوتر مفرد.
+     * مربوطة بأي دالة: تُستدعى بواسطة addNewScooter وتهيئة batchState.
+     * نصائح: التأكد من تطابق مفاتيح الكائن مع حقول الإدخال لتفادي مشاكل الـ Undefined.
+     */
+    function createNewScooterObject(id) {
+      const checklist = {};
+      INSPECTION_ITEMS.forEach(item => {
+        checklist[item.id] = 'سليم';
+      });
+
+      return {
+        id: id,
+        model: '',
+        year: '',
+        color: '',
+        chassis: '',
+        engine: '',
+        odometer: '',
+        checklist: checklist,
+        notes: '',
+        status: 'مقبول - سليم',
+        photos: []
+      };
+    }
+
+    /**
+     * اسم الدالة: initializeApp
+     * المميزات: التحقق من جلسة المستخدم وتهيئة التاريخ وبناء الواجهة التفاعلية.
+     * مربوطة بأي دالة: حدث DOMContentLoaded.
+     * نصائح: ضبط التاريخ الحالي تلقائياً لتقليل مدخلات الفني.
+     */
+    document.addEventListener('DOMContentLoaded', () => {
+      const sessionUser = localStorage.getItem('scooter_shop_auth');
+      if (sessionUser) {
+        unlockInterface(JSON.parse(sessionUser));
+      }
+
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('inspectionDate').value = today;
+      
+      renderTabs();
+      renderChecklistInputs();
+      loadCurrentScooterIntoUI();
+    });
+
+    /**
+     * اسم الدالة: handleAuthLogin
+     * المميزات: التحقق من صحة بيانات الدخول وفتح النظام وتخزين الجلسة.
+     * مربوطة بأي دالة: نموذج الدخول (loginForm).
+     * نصائح: استخدام التخزين المحلي للاحتفاظ بجلسة المدير على جهازه.
+     */
+    function handleAuthLogin(e) {
+      e.preventDefault();
+      const u = document.getElementById('authUsername').value.trim();
+      const p = document.getElementById('authPassword').value.trim();
+      const err = document.getElementById('authErrorMsg');
+
+      const found = AUTHORIZED_USERS.find(user => user.user === u && user.pass === p);
+
+      if (found) {
+        err.classList.add('hidden');
+        localStorage.setItem('scooter_shop_auth', JSON.stringify(found));
+        unlockInterface(found);
+      } else {
+        err.classList.remove('hidden');
+      }
+    }
+
+    /**
+     * اسم الدالة: unlockInterface
+     * المميزات: إخفاء نافذة تسجيل الدخول وعرض لوحة التحكم وضبط اسم الفرع الافتراضي للمستخدم.
+     * مربوطة بأي دالة: handleAuthLogin, initializeApp.
+     */
+    function unlockInterface(userData) {
+      document.getElementById('loginModal').classList.add('hidden');
+      document.getElementById('appContainer').classList.remove('hidden');
+      document.getElementById('activeUserBadge').innerText = `المستخدم: ${userData.name}`;
+      if (userData.defaultBranch) {
+        document.getElementById('branchName').value = userData.defaultBranch;
+      }
+    }
+
+    /**
+     * اسم الدالة: handleAuthLogout
+     * المميزات: مسح بيانات الجلسة وإعادة قفل النظام.
+     * مربوطة بأي دالة: زر تسجيل الخروج.
+     */
+    function handleAuthLogout() {
+      localStorage.removeItem('scooter_shop_auth');
+      location.reload();
+    }
+
+    /**
+     * اسم الدالة: renderTabs
+     * المميزات: بناء شريط التبويبات لعرض السكوترات المضافة داخل الدفعة.
+     * مربوطة بأي دالة: switchScooter, addNewScooter, removeCurrentScooter.
+     */
+    function renderTabs() {
+      const container = document.getElementById('scooterTabs');
+      container.innerHTML = '';
+
+      batchState.scooters.forEach((scooter, index) => {
+        const isActive = index === batchState.currentIndex;
+        const btn = document.createElement('button');
+        btn.className = `px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 border ${
+          isActive 
+            ? 'bg-brand-orange text-white border-brand-orange shadow-lg shadow-orange-950/40' 
+            : 'bg-brand-input text-zinc-400 border-brand-border hover:bg-zinc-800 hover:text-white'
+        }`;
+        btn.innerText = `سكوتر #${index + 1} ${scooter.chassis ? `(${scooter.chassis.slice(-4)})` : ''}`;
+        btn.onclick = () => switchScooter(index);
+        container.appendChild(btn);
+      });
+    }
+
+    /**
+     * اسم الدالة: renderChecklistInputs
+     * المميزات: توليد عناصر الاختيار لبنود الفحص الفني.
+     * مربوطة بأي دالة: initializeApp.
+     */
+    function renderChecklistInputs() {
+      const container = document.getElementById('checklistContainer');
+      container.innerHTML = '';
+
+      INSPECTION_ITEMS.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'bg-brand-input border border-brand-border p-3 rounded-xl flex justify-between items-center';
+        row.innerHTML = `
+          <span class="text-xs font-semibold text-zinc-200">${item.label}</span>
+          <div class="flex gap-2">
+            <label class="text-xs flex items-center gap-1 cursor-pointer">
+              <input type="radio" name="chk_${item.id}" value="سليم" onchange="updateChecklist('${item.id}', 'سليم')">
+              <span class="text-emerald-400 font-semibold">سليم</span>
+            </label>
+            <label class="text-xs flex items-center gap-1 cursor-pointer">
+              <input type="radio" name="chk_${item.id}" value="ملاحظة" onchange="updateChecklist('${item.id}', 'ملاحظة')">
+              <span class="text-amber-400 font-semibold">ملاحظة</span>
+            </label>
+            <label class="text-xs flex items-center gap-1 cursor-pointer">
+              <input type="radio" name="chk_${item.id}" value="تالف" onchange="updateChecklist('${item.id}', 'تالف')">
+              <span class="text-rose-400 font-semibold">تالف</span>
+            </label>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    /**
+     * اسم الدالة: loadCurrentScooterIntoUI
+     * المميزات: مزامنة بيانات السكوتر النشط مع حقول الإدخال في الشاشة.
+     * مربوطة بأي دالة: switchScooter, addNewScooter, removeCurrentScooter.
+     */
+    function loadCurrentScooterIntoUI() {
+      const s = batchState.scooters[batchState.currentIndex];
+      document.getElementById('currentScooterTitle').innerText = `بيانات سكوتر #${batchState.currentIndex + 1}`;
+      document.getElementById('scooterModel').value = s.model || '';
+      document.getElementById('scooterYear').value = s.year || '';
+      document.getElementById('scooterColor').value = s.color || '';
+      document.getElementById('scooterChassis').value = s.chassis || '';
+      document.getElementById('scooterEngine').value = s.engine || '';
+      document.getElementById('scooterOdometer').value = s.odometer || '';
+      document.getElementById('scooterNotes').value = s.notes || '';
+      document.getElementById('scooterStatus').value = s.status || 'مقبول - سليم';
+
+      INSPECTION_ITEMS.forEach(item => {
+        const val = s.checklist[item.id] || 'سليم';
+        const radio = document.querySelector(`input[name="chk_${item.id}"][value="${val}"]`);
+        if (radio) radio.checked = true;
+      });
+
+      renderPhotosPreview();
+      document.getElementById('deleteScooterBtn').style.display = batchState.scooters.length > 1 ? 'block' : 'none';
+    }
+
+    /**
+     * اسم الدالة: updateCurrentData
+     * المميزات: حفظ التعديلات في مصفوفة البيانات فور الكتابة في الحقول.
+     * مربوطة بأي دالة: أحداث oninput و onchange في حقول الإدخال.
+     */
+    function updateCurrentData(field, value) {
+      batchState.scooters[batchState.currentIndex][field] = value;
+      if (field === 'chassis') renderTabs();
+    }
+
+    /**
+     * اسم الدالة: updateChecklist
+     * المميزات: تحديث تقييم بند الفحص في كائن السكوتر الحالي.
+     * مربوطة بأي دالة: أزرار الاختيار الخاصة ببنود الفحص.
+     */
+    function updateChecklist(itemId, value) {
+      batchState.scooters[batchState.currentIndex].checklist[itemId] = value;
+    }
+
+    /**
+     * اسم الدالة: addNewScooter
+     * المميزات: إضافة سكوتر جديد للدفعة والانتقال إليه تلقائياً.
+     * مربوطة بأي دالة: زر إضافة سكوتر جديد.
+     */
+    function addNewScooter() {
+      const newId = batchState.scooters.length + 1;
+      batchState.scooters.push(createNewScooterObject(newId));
+      batchState.currentIndex = batchState.scooters.length - 1;
+      renderTabs();
+      loadCurrentScooterIntoUI();
+    }
+
+    /**
+     * اسم الدالة: switchScooter
+     * المميزات: التبديل بين سكوترات الدفعة لعرض وتعديل بياناتها.
+     * مربوطة بأي دالة: أزرار التبويبات.
+     */
+    function switchScooter(index) {
+      batchState.currentIndex = index;
+      renderTabs();
+      loadCurrentScooterIntoUI();
+    }
+
+    /**
+     * اسم الدالة: removeCurrentScooter
+     * المميزات: حذف السكوتر المعروض حالياً وضبط المؤشر.
+     * مربوطة بأي دالة: زر حذف السكوتر.
+     */
+    function removeCurrentScooter() {
+      if (batchState.scooters.length <= 1) return;
+      batchState.scooters.splice(batchState.currentIndex, 1);
+      batchState.currentIndex = Math.max(0, batchState.currentIndex - 1);
+      renderTabs();
+      loadCurrentScooterIntoUI();
+    }
+
+    /**
+     * اسم الدالة: handleImageUpload
+     * المميزات: تحويل الصور المرفوعة إلى Base64 وإرفاقها بكائن السكوتر.
+     * مربوطة بأي دالة: مدخل رفع الصور (photoInput).
+     */
+    function handleImageUpload(event) {
+      const files = event.target.files;
+      const s = batchState.scooters[batchState.currentIndex];
+      
+      if (s.photos.length + files.length > 4) {
+        alert('الحد الأقصى المسموح به هو 4 صور لكل سكوتر.');
+        return;
+      }
+
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          s.photos.push({ data: e.target.result });
+          renderPhotosPreview();
+        };
+        reader.readAsDataURL(file);
+      });
+      event.target.value = '';
+    }
+
+    /**
+     * اسم الدالة: renderPhotosPreview
+     * المميزات: عرض المعاينة المصغرة لصور السكوتر في شاشة الإدخال مع زر الحذف.
+     * مربوطة بأي دالة: loadCurrentScooterIntoUI, handleImageUpload, removePhoto.
+     */
+    function renderPhotosPreview() {
+      const container = document.getElementById('photosPreviewContainer');
+      container.innerHTML = '';
+      const s = batchState.scooters[batchState.currentIndex];
+
+      s.photos.forEach((photo, idx) => {
+        const div = document.createElement('div');
+        div.className = 'relative group rounded-xl overflow-hidden border border-brand-border bg-brand-input';
+        div.innerHTML = `
+          <img src="${photo.data}" class="w-full h-24 object-cover">
+          <button onclick="removePhoto(${idx})" class="absolute top-1.5 right-1.5 bg-rose-600/90 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">×</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    /**
+     * اسم الدالة: removePhoto
+     * المميزات: حذف صورة محددة من السكوتر النشط.
+     * مربوطة بأي دالة: زر الحذف في المعاينة المصغرة.
+     */
+    function removePhoto(idx) {
+      batchState.scooters[batchState.currentIndex].photos.splice(idx, 1);
+      renderPhotosPreview();
+    }
+
+    /**
+     * اسم الدالة: populateRenderCard
+     * المميزات: نقل كافة بيانات السكوتر المحدد إلى كارت التقرير المخفي وتنسيق حالته وألوانه.
+     * مربوطة بأي دالة: generateImageBlob.
+     */
+    function populateRenderCard(scooter, branch, date, inspector, manager) {
+      document.getElementById('rcBranchDate').innerText = `الفرع: ${branch.replace(/_/g, ' ')} | تاريخ الفحص: ${date}`;
+      document.getElementById('rcModel').innerText = scooter.model || 'غير محدد';
+      document.getElementById('rcYear').innerText = scooter.year || '-';
+      document.getElementById('rcColor').innerText = scooter.color || '-';
+      document.getElementById('rcChassis').innerText = scooter.chassis || 'غير مدون';
+      document.getElementById('rcEngine').innerText = scooter.engine || '-';
+      document.getElementById('rcOdometer').innerText = scooter.odometer ? `${scooter.odometer} كم` : '-';
+      document.getElementById('rcNotes').innerText = scooter.notes || 'لا توجد ملاحظات مسجلة على هذا السكوتر.';
+      document.getElementById('rcInspector').innerText = inspector || 'غير محدد';
+      document.getElementById('rcManager').innerText = manager || 'غير محدد';
+
+      // تحديث شارة القرار النهائي
+      const badge = document.getElementById('rcStatusBadge');
+      badge.innerText = scooter.status;
+      if (scooter.status.includes('سليم')) {
+        badge.className = 'px-4 py-2 rounded-lg font-black text-sm bg-emerald-950/80 text-emerald-400 border border-emerald-700';
+      } else if (scooter.status.includes('ملاحظات')) {
+        badge.className = 'px-4 py-2 rounded-lg font-black text-sm bg-amber-950/80 text-amber-400 border border-amber-700';
+      } else {
+        badge.className = 'px-4 py-2 rounded-lg font-black text-sm bg-rose-950/80 text-rose-400 border border-rose-700';
+      }
+
+      // ملء نتائج الفحص
+      const chkContainer = document.getElementById('rcChecklist');
+      chkContainer.innerHTML = '';
+      INSPECTION_ITEMS.forEach(item => {
+        const val = scooter.checklist[item.id] || 'سليم';
+        let colorClass = 'text-emerald-400';
+        if (val === 'ملاحظة') colorClass = 'text-amber-400';
+        if (val === 'تالف') colorClass = 'text-rose-400 font-bold';
+
+        const div = document.createElement('div');
+        div.className = 'flex justify-between bg-zinc-900 p-2 px-3 rounded-lg border border-zinc-800';
+        div.innerHTML = `<span>${item.label}:</span> <span class="${colorClass}">${val}</span>`;
+        chkContainer.appendChild(div);
+      });
+
+      // ملء صور التلفيات
+      const pSection = document.getElementById('rcPhotosSection');
+      const pContainer = document.getElementById('rcPhotosContainer');
+      pContainer.innerHTML = '';
+      if (scooter.photos && scooter.photos.length > 0) {
+        pSection.classList.remove('hidden');
+        scooter.photos.forEach(photo => {
+          const img = document.createElement('img');
+          img.src = photo.data;
+          img.className = 'w-full h-24 object-cover rounded-lg border border-zinc-700';
+          pContainer.appendChild(img);
+        });
+      } else {
+        pSection.classList.add('hidden');
+      }
+    }
+
+    /**
+     * اسم الدالة: generateImageBlob
+     * المميزات: التقاط صورة رقمية عالية الدقة لكارت الفحص وتنزيلها باسم معتمد (الفرع_التاريخ_الشاسيه).
+     * مربوطة بأي دالة: exportCurrentScooter, exportAllBatch.
+     * نصائح: مقياس scale: 2 يضمن دقة عالية للطباعة والقراءة داخل جروبات المحادثة.
+     */
+    async function generateImageBlob(scooter, index) {
+      const branch = document.getElementById('branchName').value;
+      const date = document.getElementById('inspectionDate').value;
+      const inspector = document.getElementById('inspectorName').value;
+      const manager = document.getElementById('managerName').value;
+
+      populateRenderCard(scooter, branch, date, inspector, manager);
+
+      const renderEl = document.getElementById('renderCard');
+      const canvas = await html2canvas(renderEl, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#09090B'
+      });
+
+      // صيغة التسمية الرسمية: [اسم الفرع]_[التاريخ]_[رقم الشاسيه أو الترتيب]
+      const chassisClean = scooter.chassis ? scooter.chassis.trim().replace(/\s+/g, '_') : `سكوتر_${index + 1}`;
+      const fileName = `${branch}_${date}_${chassisClean}.png`;
+
+      const link = document.createElement('a');
+      link.download = fileName;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    /**
+     * اسم الدالة: exportCurrentScooter
+     * المميزات: التحقق من اكتمال التوقيعات وإصدار صورة السكوتر النشط.
+     * مربوطة بأي دالة: زر تصدير صورة هذا السكوتر.
+     */
+    async function exportCurrentScooter() {
+      const s = batchState.scooters[batchState.currentIndex];
+      const inspector = document.getElementById('inspectorName').value.trim();
+      const manager = document.getElementById('managerName').value.trim();
+
+      if (!inspector || !manager) {
+        alert('يرجى تسجيل اسم الفني واسم مدير الفرع المعتمد قبل استخراج التقرير.');
+        return;
+      }
+
+      await generateImageBlob(s, batchState.currentIndex);
+    }
+
+    /**
+     * اسم الدالة: exportAllBatch
+     * المميزات: تصدير كافة كروت الفحص الخاصة بالدفعة دفعة واحدة بشكل متتابع.
+     * مربوطة بأي دالة: زر تصدير كامل الدفعة.
+     */
+    async function exportAllBatch() {
+      const inspector = document.getElementById('inspectorName').value.trim();
+      const manager = document.getElementById('managerName').value.trim();
+
+      if (!inspector || !manager) {
+        alert('يرجى تسجيل اسم الفني واسم مدير الفرع المعتمد قبل استخراج التقارير.');
+        return;
+      }
+
+      for (let i = 0; i < batchState.scooters.length; i++) {
+        await generateImageBlob(batchState.scooters[i], i);
+        await new Promise(resolve => setTimeout(resolve, 400));
+      }
+    }
+  </script>
+</body>
+</html>
