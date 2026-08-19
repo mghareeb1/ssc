@@ -62,12 +62,8 @@
     <div class="bg-brand-card border border-brand-border p-8 rounded-2xl shadow-2xl w-full max-w-md text-center">
       
       <!-- شعار النظام -->
-      <div class="flex justify-center mb-4">
-        <div class="w-20 h-20 bg-brand-input rounded-full flex items-center justify-center border-2 border-brand-orange shadow-lg shadow-orange-950/40">
-          <svg class="w-12 h-12 text-brand-orange" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-        </div>
+      <div class="flex justify-center mb-3">
+        <img src="logo.jpg" alt="Scooter Shop Logo" class="w-28 h-28 object-contain drop-shadow-md">
       </div>
 
       <h2 class="text-2xl font-black text-white tracking-wide">SCOOTER SHOP</h2>
@@ -82,7 +78,7 @@
           <label class="block text-xs font-semibold text-zinc-400 mb-1">كلمة المرور</label>
           <input type="password" id="authPassword" placeholder="••••••••" required class="w-full bg-brand-input border border-brand-border rounded-xl p-3 text-sm text-white placeholder-zinc-500 focus:border-brand-orange focus:outline-none transition-all">
         </div>
-        <p id="authErrorMsg" class="text-xs text-rose-500 font-semibold hidden text-center pt-1">بيانات الدخول غير صحيحة، يرجى المحاولة مجدداً.</p>
+        <p id="authErrorMsg" class="text-xs text-rose-500 font-semibold hidden text-center pt-1">بيانات الاعتماد المدخلة غير صحيحة، يرجى إعادة المحاولة.</p>
         <button type="submit" class="w-full bg-brand-orange hover:bg-brand-orangeDark text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-orange-950/50 mt-2">
           تسجيل الدخول
         </button>
@@ -99,9 +95,7 @@
       <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
         
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 bg-brand-input rounded-lg flex items-center justify-center border border-brand-orange">
-            <span class="text-brand-orange font-black text-base">SS</span>
-          </div>
+          <img src="logo.jpg" alt="Logo" class="w-12 h-12 object-contain">
           <div>
             <h1 class="text-lg font-bold text-white leading-tight">SCOOTER SHOP COMPANY</h1>
             <p class="text-xs text-zinc-400">إصدار تقارير الفحص والاعتماد</p>
@@ -258,9 +252,7 @@
       <!-- ترويسة التقرير الرسمي -->
       <div class="flex justify-between items-center border-b-2 border-brand-orange pb-4">
         <div class="flex items-center gap-4">
-          <div class="w-14 h-14 bg-zinc-900 rounded-xl flex items-center justify-center border border-brand-orange">
-            <span class="text-brand-orange font-black text-xl">SS</span>
-          </div>
+          <img src="logo.jpg" alt="Logo" class="w-16 h-16 object-contain">
           <div>
             <h1 class="text-2xl font-black text-white tracking-wide">SCOOTER SHOP COMPANY</h1>
             <p class="text-xs text-zinc-400" id="rcBranchDate">الفرع: - | تاريخ الفحص: -</p>
@@ -302,7 +294,7 @@
       <!-- الملاحظات والتوصيات -->
       <div class="text-xs bg-zinc-900/60 p-3.5 rounded-xl border border-zinc-800">
         <span class="text-brand-orange font-bold block mb-1">ملاحظات الفني وتوصيات الصيانة:</span>
-        <p id="rcNotes" class="text-zinc-300 leading-relaxed">- لا توجد ملاحظات إضافية.</p>
+        <p id="rcNotes" class="text-zinc-300 leading-relaxed">- لا توجد ملاحظات إضافية مسجلة.</p>
       </div>
 
       <!-- التوقيعات والاعتماد الرسمي -->
@@ -317,7 +309,7 @@
         </div>
         <div class="text-right">
           <span class="text-[10px] text-zinc-500 font-mono block">SCOOTER SHOP INSPECTION SYSTEM</span>
-          <span class="text-[10px] text-brand-orange font-semibold">تقرير رسمي معتمد</span>
+          <span class="text-[10px] text-brand-orange font-semibold">تقرير فحص معتمد</span>
         </div>
       </div>
 
@@ -648,7 +640,7 @@
 
     /**
      * اسم الدالة: populateRenderCard
-     * المميزات: نقل كافة بيانات السكوتر المحدد إلى كارت التقرير المخفي وتنسيق حالته وألوانه.
+     * المميزات: نقل كافة بيانات السكوتر المحدد إلى كارت التقرير المخفي وتنسيق حالته وألوانه وشعاره.
      * مربوطة بأي دالة: generateImageBlob.
      */
     function populateRenderCard(scooter, branch, date, inspector, manager) {
@@ -727,7 +719,6 @@
         backgroundColor: '#09090B'
       });
 
-      // صيغة التسمية الرسمية: [اسم الفرع]_[التاريخ]_[رقم الشاسيه أو الترتيب]
       const chassisClean = scooter.chassis ? scooter.chassis.trim().replace(/\s+/g, '_') : `سكوتر_${index + 1}`;
       const fileName = `${branch}_${date}_${chassisClean}.png`;
 
