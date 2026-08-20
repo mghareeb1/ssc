@@ -281,11 +281,11 @@
             
             <select id="reportFilterBranch" onchange="applyReportFilters()" class="bg-brand-input border border-brand-border rounded-xl p-2.5 text-xs text-white focus:border-brand-orange outline-none">
               <option value="">كافة الفروع</option>
-              <option value="فرع_الرئيسي">الفرع الرئيسي</option>
               <option value="فرع_مدينة_نصر">فرع مدينة نصر</option>
-              <option value="فرع_المهندسين">فرع المهندسين</option>
-              <option value="فرع_الإسكندرية">فرع الإسكندرية</option>
-              <option value="فرع_المعادي">فرع المعادي</option>
+              <option value="فرع_الزقازيق">فرع الزقازيق</option>
+              <option value="فرع_بلقاس">فرع بلقاس</option>
+              <option value="فرع_المنصورة">فرع المنصورة</option>
+              <option value="فرع_دمياط">فرع دمياط</option>
             </select>
 
             <select id="reportFilterStatus" onchange="applyReportFilters()" class="bg-brand-input border border-brand-border rounded-xl p-2.5 text-xs text-white focus:border-brand-orange outline-none">
@@ -407,12 +407,15 @@
      * قائمة المستخدمين والصلاحيات
      */
     const AUTHORIZED_USERS = [
-      { user: "admin", pass: "scooter2026", name: "الإدارة العامة", role: "admin", defaultBranch: "فرع_الرئيسي" },
-      { user: "branch1", pass: "nasrcity123", name: "معرض مدينة نصر", role: "branch", defaultBranch: "فرع_مدينة_نصر" },
-      { user: "branch2", pass: "mohandessin123", name: "معرض المهندسين", role: "branch", defaultBranch: "فرع_المهندسين" },
-      { user: "branch3", pass: "alex123", name: "معرض الإسكندرية", role: "branch", defaultBranch: "فرع_الإسكندرية" },
-      { user: "branch4", pass: "maadi123", name: "معرض المعادي", role: "branch", defaultBranch: "فرع_المعادي" },
-      { user: "branch5", pass: "main123", name: "المعرض الرئيسي", role: "branch", defaultBranch: "فرع_الرئيسي" }
+      { user: "Ehab", pass: "cprkrdz2", name: "الإدارة العامة", role: "admin", defaultBranch: "فرع_مدينة_نصر" },
+      { user: "Aadly", pass: "kvzjcp86", name: "الإدارة العامة", role: "admin", defaultBranch: "فرع_مدينة_نصر" },
+      { user: "Mohammed", pass: "wps5ey83", name: "الإدارة العامة", role: "admin", defaultBranch: "فرع_مدينة_نصر" },
+      { user: "Mahmoud", pass: "gs3j4j6p", name: "الإدارة العامة", role: "admin", defaultBranch: "فرع_مدينة_نصر" },
+      { user: "Mshaltout", pass: "21856vky", name: "معرض مدينة نصر", role: "branch", defaultBranch: "فرع_مدينة_نصر" },
+      { user: "Tarek", pass: "73fne76u", name: "معرض الزقازيق", role: "branch", defaultBranch: "فرع_الزقازيق" },
+      { user: "Aantar", pass: "z7c232mb", name: "معرض بلقاس", role: "branch", defaultBranch: "فرع_بلقاس" },
+      { user: "Hamada", pass: "xf96f516", name: "معرض المنصورة", role: "branch", defaultBranch: "فرع_المنصورة" },
+      { user: "Fathe", pass: "pza85zpe", name: "معرض دمياط", role: "branch", defaultBranch: "فرع_دمياط" }
     ];
 
     /**
