@@ -1007,8 +1007,9 @@
       csv += "التاريخ,الفرع,الموديل,رقم الشاسيه,رقم الموتور,القرار الفني,الملاحظات\n";
 
       rawReportsData.forEach(r => {
+        const cleanDate = r.date ? String(r.date).split('T')[0] : '';
         const line = [
-          `"${r.date || ''}"`,
+          `"${cleanDate}"`,
           `"${r.branch || ''}"`,
           `"${r.model || ''}"`,
           `"${r.chassis || ''}"`,
