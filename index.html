@@ -953,8 +953,9 @@
 
     /**
      * اسم الدالة: renderReportsTable
-     * المميزات: عرض السجلات المفلترة داخل الجدول (مستبعد منها العداد والفني والمدير).
+     * المميزات: عرض السجلات المفلترة وتنسيق صيغة التاريخ لعرض (YYYY-MM-DD) فقط وحذف لاحقة الوقت ISO.
      * مربوطة بأي دالة: applyReportFilters.
+     * نصائح: استخدام split('T')[0] يضمن قراءة التاريخ المجرد بدقة بغض النظر عن طريقة حفظه في Google Sheets.
      */
     function renderReportsTable(data) {
       const tbody = document.getElementById('reportsTableBody');
@@ -973,10 +974,13 @@
           statusBadge = `<span class="text-rose-400 font-bold">مرفوض</span>`;
         }
 
+        // تنظيف التاريخ واستخراج الجزء المجرد فقط
+        const cleanDate = row.date ? String(row.date).split('T')[0] : '-';
+
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-zinc-800/50 transition-colors';
         tr.innerHTML = `
-          <td class="p-3.5 font-mono text-zinc-400">${row.date || '-'}</td>
+          <td class="p-3.5 font-mono text-zinc-400">${cleanDate}</td>
           <td class="p-3.5 font-semibold text-white">${row.branch || '-'}</td>
           <td class="p-3.5 text-zinc-200">${row.model || '-'}</td>
           <td class="p-3.5 font-mono text-brand-orangeLight">${row.chassis || '-'}</td>
